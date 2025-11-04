@@ -1,0 +1,72 @@
+init_checkpoint_path: pretrain_models_ckpt/mochi-1-preview/dit.safetensors
+checkpoint_dir: finetunes/example/NTU_RGB_D/A112-high-five
+train_data_dir: videos_prepared/NTU_RGB_D/A112-high-five
+mask_data_dir: videos/NTU_RGB_D/A112-high-five_masks
+loss_mask_type: combine_mask
+loss_mask_lam: 50  # lambda for combine_mask
+attention_mode: sdpa
+train_lora_names: ["relation", "subject1", "subject2"]
+test_lora_names: ["relation"]
+use_relational_contrastive_learning: true
+positive_buffer_size: 10
+negative_buffer_size: 64
+relational_contrastive_learning_lam: 0.01
+total_positive_nums: 4
+total_negative_nums: 10
+
+# You only need this if you're using wandb
+# wandb:
+  # project: mochi_1_lora
+  # name: ${checkpoint_dir}
+  # group: null
+
+optimizer:
+  lr: 2e-4
+  weight_decay: 0.01
+
+model:
+  type: lora
+  kwargs:
+    separate_qkv_x: True
+    separate_qkv_y: True
+    # Apply LoRA to the QKV projection and the output projection of the attention block.
+    qkv_proj_lora_rank: 16
+    qkv_proj_lora_alpha: 16
+    qkv_proj_lora_dropout: 0.
+    q_lora_names: ["relation"]
+    k_lora_names: ["relation"]
+    v_lora_names: ["subject1", "subject2"]
+    test_lora_names: ["relation"]
+    out_proj_lora_rank: 16
+    out_proj_lora_alpha: 16
+    out_proj_lora_dropout: 0.
+
+training:
+  model_dtype: bf16
+  warmup_steps: 200
+  num_qkv_checkpoint: 48
+  num_ff_checkpoint: 48
+  num_post_attn_checkpoint: 48
+  num_steps: 3000
+  save_interval: 200
+  caption_dropout: 0.1
+  grad_clip: 0.0
+  save_safetensors: false
+  # resume_from_lora_checkpoint: True
+  # save_optimizer: True
+
+# Used for generating samples during training to monitor progress ...
+sample:
+   interval: 200
+   output_dir: ${checkpoint_dir}/samples
+   decoder_path: pretrain_models_ckpt/mochi-1-preview/decoder.safetensors
+   prompts:
+       - A panda is high-fiving with a bear.
+   seed: 12345
+   kwargs:
+     height: 480
+     width: 848
+     num_frames: 61
+     num_inference_steps: 64
+     sigma_schedule_python_code: "linear_quadratic_schedule(64, 0.025)"
+     cfg_schedule_python_code: "[6.0] * 64"

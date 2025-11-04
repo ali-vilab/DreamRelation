@@ -1,0 +1,26 @@
+.venv
+.venv_test
+.DS_Store
+dist
+__pycache__
+mochi.egg-info
+genmo.egg-info
+build
+.ruff_cache
+# *.mp4
+# *.txt
+# *.pt
+*.log
+*.json
+*.safetensors
+wandb/
+*.err
+*.out
+*.MOV
+.vscode
+contrib
+finetunes/
+videos_prepared/
+outputs/
+*.sh
+*.pyc
